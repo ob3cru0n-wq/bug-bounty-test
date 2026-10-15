@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>PM Sentinel Options</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#111;color:#ccc;font:12px/1.6 monospace;padding:20px;max-width:500px}
+h2{color:#0ff;margin-bottom:12px;font-size:14px}
+.group{border:1px solid #333;padding:10px;margin-bottom:10px;border-radius:4px}
+.group h3{color:#f0f;font-size:11px;margin-bottom:6px}
+label{display:block;margin:4px 0;cursor:pointer}
+label input[type=checkbox]{margin-right:6px}
+input[type=number],input[type=text]{font:11px monospace;background:#1a1a1a;color:#0f0;border:1px solid #333;padding:3px 6px;width:100%;margin:2px 0}
+.note{color:#555;font-size:10px;margin-top:2px}
+button{font:11px monospace;background:#1a1a1a;color:#0ff;border:1px solid #0ff;padding:4px 12px;cursor:pointer;margin-top:10px;border-radius:2px}
+button:hover{background:#0ff;color:#000}
+.saved{color:#0f0;font-size:10px;margin-left:8px;opacity:0;transition:opacity .3s}
+.saved.show{opacity:1}
+</style>
+</head>
+<body>
+<h2>⚡ PM Sentinel — Options</h2>
+
+<div class="group">
+  <h3>Capture Settings</h3>
+  <label><input type="checkbox" id="cap-listeners" checked> Track listener registrations (addEventListener, onmessage)</label>
+  <label><input type="checkbox" id="cap-sends" checked> Track postMessage sends</label>
+  <label><input type="checkbox" id="cap-receives" checked> Track received messages</label>
+  <label><input type="checkbox" id="cap-channels" checked> Track channel/worker creation</label>
+  <label><input type="checkbox" id="cap-nav" checked> Track navigation (pushState/replaceState)</label>
+</div>
+
+<div class="group">
+  <h3>Limits</h3>
+  <label>Max events per category per tab:
+    <input type="number" id="max-events" value="5000" min="100" max="50000">
+  </label>
+  <div class="note">Oldest entries are discarded when limit is reached.</div>
+</div>
+
+<div class="group">
+  <h3>Filters</h3>
+  <label><input type="checkbox" id="filter-ext" checked> Hide events from extension scripts</label>
+  <label><input type="checkbox" id="filter-devtools"> Hide framework devtools messages (React, Redux, Vue, webpack, Vite)</label>
+  <label>Exclude sources containing:
+    <input type="text" id="exclude-sources" placeholder="comma-separated, e.g. jquery, analytics">
+  </label>
+</div>
+
+<div class="group">
+  <h3>Remote Logging</h3>
+  <label>POST events to URL:
+    <input type="text" id="log-url" placeholder="https://your-server.com/log">
+  </label>
+  <div class="note">Events are POSTed as JSON. Leave empty to disable.</div>
+</div>
+
+<button id="btn-save">Save</button>
+<span class="saved" id="saved">Saved!</span>
+
+<script src="options.js"></script>
+</body>
+</html>
