@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f2f5;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+      padding: 48px 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      margin-bottom: 16px;
+      border: 3px solid #e5e7eb;
+    }
+
+    .card h1 {
+      font-size: 22px;
+      color: #1a1a1a;
+      margin-bottom: 4px;
+    }
+
+    .email {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #ecfdf5;
+      color: #065f46;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 12px;
+      border-radius: 99px;
+      margin-bottom: 24px;
+    }
+
+    .info-table {
+      width: 100%;
+      text-align: left;
+      border-collapse: collapse;
+      margin-bottom: 32px;
+    }
+
+    .info-table td {
+      padding: 10px 12px;
+      font-size: 14px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .info-table td:first-child {
+      color: #888;
+      width: 120px;
+    }
+
+    .logout-btn {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 32px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .logout-btn:hover { background: #dc2626; }
+
+    .loading { color: #999; padding: 40px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div id="loading" class="loading">Loading profile...</div>
+    <div id="profile" style="display:none;">
+      <img id="avatar" class="avatar" src="" alt="avatar">
+      <h1 id="name"></h1>
+      <p class="email" id="email"></p>
+      <span class="badge" id="verified" style="display:none;">Verified email</span>
+
+      <table class="info-table">
+        <tr><td>Google ID</td><td id="gid"></td></tr>
+        <tr><td>Given name</td><td id="given"></td></tr>
+        <tr><td>Family name</td><td id="family"></td></tr>
+        <tr><td>Locale</td><td id="locale"></td></tr>
+      </table>
+
+      <form action="/auth/logout" method="POST">
+        <button type="submit" class="logout-btn">Sign out</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    fetch('/api/user')
+      .then(r => { if (!r.ok) throw new Error(); return r.json(); })
+      .then(u => {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('profile').style.display = 'block';
+        document.getElementById('avatar').src = u.picture || '';
+        document.getElementById('name').textContent = u.name || 'Unknown';
+        document.getElementById('email').textContent = u.email || '';
+        document.getElementById('gid').textContent = u.id || '';
+        document.getElementById('given').textContent = u.given_name || '';
+        document.getElementById('family').textContent = u.family_name || '';
+        document.getElementById('locale').textContent = u.locale || '';
+        if (u.verified_email) {
+          document.getElementById('verified').style.display = 'inline-block';
+        }
+      })
+      .catch(() => { window.location.href = '/'; });
+  </script>
+</body>
+</html>
