@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OAuth Labs — Index</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:40px 20px}
+    .container{max-width:800px;margin:0 auto}
+    h1{font-size:28px;margin-bottom:8px;text-align:center}
+    .sub{color:#94a3b8;text-align:center;margin-bottom:40px;font-size:14px}
+    .labs{display:flex;flex-direction:column;gap:16px}
+    .lab{background:#1e293b;border-radius:12px;padding:24px;display:flex;align-items:center;gap:20px;text-decoration:none;color:inherit;transition:transform .15s,box-shadow .15s;border:1px solid transparent}
+    .lab:hover{transform:translateY(-2px);box-shadow:0 4px 20px rgba(0,0,0,.3);border-color:#334155}
+    .num{font-size:32px;font-weight:800;font-family:monospace;min-width:60px;text-align:center}
+    .lab-info h2{font-size:17px;margin-bottom:4px}
+    .lab-info p{color:#94a3b8;font-size:13px}
+    .lab-info .mech{font-size:11px;color:#67e8f9;font-family:monospace;margin-top:6px;background:#0f172a;display:inline-block;padding:2px 8px;border-radius:4px}
+    .port{font-family:monospace;font-size:13px;color:#fbbf24;margin-left:auto;white-space:nowrap}
+    .c1{color:#3b82f6} .c2{color:#059669} .c3{color:#d97706} .c4{color:#dc2626} .c5{color:#7c3aed}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>OAuth / GSI Labs</h1>
+    <p class="sub">5 different Google sign-in implementation patterns</p>
+
+    <div class="labs">
+      <a class="lab" href="http://localhost:3007">
+        <span class="num c1">07</span>
+        <div class="lab-info">
+          <h2>Implicit + popup + postMessage</h2>
+          <p>OAuth 2.0 Implicit flow via popup. Token in URL fragment, sent back via postMessage.</p>
+          <span class="mech">URL fragment + postMessage</span>
+        </div>
+        <span class="port">:3007</span>
+      </a>
+
+      <a class="lab" href="http://localhost:3008">
+        <span class="num c2">08</span>
+        <div class="lab-info">
+          <h2>GIS One Tap (FedCM) + renderButton</h2>
+          <p>Google Identity Services — One Tap overlay + rendered button. JWT credential returned.</p>
+          <span class="mech">FedCM / MessageChannel</span>
+        </div>
+        <span class="port">:3008</span>
+      </a>
+
+      <a class="lab" href="http://localhost:3009">
+        <span class="num c3">09</span>
+        <div class="lab-info">
+          <h2>GIS renderButton()</h2>
+          <p>Google Identity Services — renderButton only with nonce/hash replay protection.</p>
+          <span class="mech">MessageChannel (nonce/hash)</span>
+        </div>
+        <span class="port">:3009</span>
+      </a>
+
+      <a class="lab" href="http://localhost:3010">
+        <span class="num c4">10</span>
+        <div class="lab-info">
+          <h2>GIS Token Client (access_token)</h2>
+          <p>Google Identity Services — Token model. Gets access_token directly via popup.</p>
+          <span class="mech">storagerelay + postMessage</span>
+        </div>
+        <span class="port">:3010</span>
+      </a>
+
+      <a class="lab" href="http://localhost:3011">
+        <span class="num c5">11</span>
+        <div class="lab-info">
+          <h2>GIS Code Client (auth code)</h2>
+          <p>Google Identity Services — Code model. Gets auth code, server exchanges for tokens.</p>
+          <span class="mech">storagerelay + postMessage</span>
+        </div>
+        <span class="port">:3011</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

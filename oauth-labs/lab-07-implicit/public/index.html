@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 07 — Implicit + popup + postMessage</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .card{background:#1e293b;border-radius:12px;padding:40px;max-width:520px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.3)}
+    .badge{display:inline-block;background:#7c3aed;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+    h1{font-size:22px;margin-bottom:4px}
+    .sub{color:#94a3b8;font-size:13px;margin-bottom:24px}
+    .flow{background:#0f172a;border-radius:8px;padding:16px;font-size:12px;color:#94a3b8;line-height:1.8;margin-bottom:24px;font-family:monospace}
+    .flow span{color:#38bdf8}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:15px;cursor:pointer;transition:background .2s}
+    .btn:hover{background:#2563eb}
+    .btn svg{width:20px;height:20px}
+    #result{margin-top:24px;display:none}
+    .profile{display:flex;align-items:center;gap:16px;background:#0f172a;border-radius:8px;padding:16px}
+    .profile img{width:56px;height:56px;border-radius:50%;border:2px solid #3b82f6}
+    .profile h3{font-size:16px;margin-bottom:2px}
+    .profile p{color:#94a3b8;font-size:13px}
+    .raw{margin-top:16px;background:#0f172a;border-radius:8px;padding:16px;font-size:12px;color:#67e8f9;font-family:monospace;white-space:pre-wrap;max-height:200px;overflow-y:auto}
+    .error{color:#f87171;margin-top:16px;font-size:14px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">Lab 07</span>
+    <h1>Implicit + popup + postMessage</h1>
+    <p class="sub">OAuth 2.0 Implicit flow via popup window. Token returned in URL fragment, sent back via postMessage.</p>
+
+    <div class="flow">
+      1. Main window opens <span>popup → Google auth</span><br>
+      2. Google redirects popup to <span>/callback.html#access_token=...</span><br>
+      3. Callback reads fragment, calls <span>postMessage(token)</span><br>
+      4. Main window receives token, calls <span>/api/userinfo</span><br>
+      5. Server fetches profile with <span>access_token</span>
+    </div>
+
+    <button class="btn" onclick="startImplicit()">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59a14.5 14.5 0 010-9.18l-7.98-6.19a24.003 24.003 0 000 21.56l7.98-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Sign in with Google
+    </button>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    let CLIENT_ID = "";
+    fetch("/config").then(r => r.json()).then(c => CLIENT_ID = c.client_id);
+
+    function startImplicit() {
+      const redirectUri = window.location.origin + "/callback.html";
+      const state = Math.random().toString(36).slice(2);
+      sessionStorage.setItem("oauth_state", state);
+
+      const params = new URLSearchParams({
+        client_id: CLIENT_ID,
+        redirect_uri: redirectUri,
+        response_type: "token",
+        scope: "openid email profile",
+        state: state,
+        prompt: "consent",
+      });
+
+      const popup = window.open(
+        "https://accounts.google.com/o/oauth2/v2/auth?" + params,
+        "google_auth",
+        "width=500,height=600,left=200,top=100"
+      );
+
+      window.addEventListener("message", async function handler(e) {
+        if (e.origin !== window.location.origin) return;
+        window.removeEventListener("message", handler);
+
+        const { access_token, state: retState, error } = e.data;
+
+        if (error) {
+          document.getElementById("result").innerHTML = `<p class="error">Error: ${error}</p>`;
+          document.getElementById("result").style.display = "block";
+          return;
+        }
+
+        if (retState !== sessionStorage.getItem("oauth_state")) {
+          document.getElementById("result").innerHTML = `<p class="error">State mismatch — possible CSRF</p>`;
+          document.getElementById("result").style.display = "block";
+          return;
+        }
+
+        const res = await fetch("/api/userinfo?access_token=" + encodeURIComponent(access_token));
+        const user = await res.json();
+
+        document.getElementById("result").innerHTML = `
+          <div class="profile">
+            <img src="${user.picture || ''}" alt="">
+            <div>
+              <h3>${user.name || 'Unknown'}</h3>
+              <p>${user.email || ''}</p>
+            </div>
+          </div>
+          <div class="raw">${JSON.stringify(user, null, 2)}</div>
+        `;
+        document.getElementById("result").style.display = "block";
+      });
+    }
+  </script>
+</body>
+</html>
