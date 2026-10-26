@@ -1,0 +1,17 @@
+{
+  "name": "oauth-labs",
+  "version": "1.0.0",
+  "description": "OAuth / GSI labs — 5 different Google sign-in flows",
+  "scripts": {
+    "lab07": "node lab-07-implicit/backend/server.js",
+    "lab08": "node lab-08-gis-onetap/backend/server.js",
+    "lab09": "node lab-09-gis-button/backend/server.js",
+    "lab10": "node lab-10-gis-token-client/backend/server.js",
+    "lab11": "node lab-11-gis-code-client/backend/server.js",
+    "all": "node start-all.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3"
+  }
+}

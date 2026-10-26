@@ -1,0 +1,13 @@
+{
+  "name": "gsi-oauth-app",
+  "version": "1.0.0",
+  "description": "Google Sign-In OAuth 2.0 web app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "express-session": "^1.17.3"
+  }
+}
