@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 08 — GIS One Tap (FedCM) + renderButton</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .card{background:#1e293b;border-radius:12px;padding:40px;max-width:520px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.3)}
+    .badge{display:inline-block;background:#059669;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+    h1{font-size:22px;margin-bottom:4px}
+    .sub{color:#94a3b8;font-size:13px;margin-bottom:24px}
+    .flow{background:#0f172a;border-radius:8px;padding:16px;font-size:12px;color:#94a3b8;line-height:1.8;margin-bottom:24px;font-family:monospace}
+    .flow span{color:#34d399}
+    .g-btn-wrap{margin-bottom:16px}
+    #result{margin-top:24px;display:none}
+    .profile{display:flex;align-items:center;gap:16px;background:#0f172a;border-radius:8px;padding:16px}
+    .profile img{width:56px;height:56px;border-radius:50%;border:2px solid #059669}
+    .profile h3{font-size:16px;margin-bottom:2px}
+    .profile p{color:#94a3b8;font-size:13px}
+    .raw{margin-top:16px;background:#0f172a;border-radius:8px;padding:16px;font-size:12px;color:#67e8f9;font-family:monospace;white-space:pre-wrap;max-height:200px;overflow-y:auto}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">Lab 08</span>
+    <h1>GIS One Tap (FedCM) + renderButton</h1>
+    <p class="sub">Google Identity Services — One Tap prompt via FedCM + rendered sign-in button. Returns JWT credential.</p>
+    <div class="flow">
+      1. Page loads <span>GSI client library</span><br>
+      2. <span>google.accounts.id.initialize()</span> with callback<br>
+      3. <span>google.accounts.id.prompt()</span> shows One Tap<br>
+      4. <span>renderButton()</span> as fallback<br>
+      5. Callback receives <span>credential (JWT)</span><br>
+      6. POST to <span>api/verify.php</span> → PHP validates JWT
+    </div>
+    <div id="g_btn" class="g-btn-wrap"></div>
+    <div id="result"></div>
+  </div>
+  <script>
+    let CLIENT_ID="";
+    fetch("api/client-id.php").then(r=>r.json()).then(c=>{CLIENT_ID=c.client_id;loadGsi();});
+    function loadGsi(){const s=document.createElement("script");s.src="https://accounts.google.com/gsi/client";s.onload=initGsi;document.head.appendChild(s);}
+    function initGsi(){
+      google.accounts.id.initialize({client_id:CLIENT_ID,callback:handleCred,use_fedcm_for_prompt:true});
+      google.accounts.id.prompt();
+      google.accounts.id.renderButton(document.getElementById("g_btn"),{theme:"outline",size:"large",text:"signin_with",shape:"rectangular",width:300});
+    }
+    async function handleCred(response){
+      const res=await fetch("api/verify.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential:response.credential})});
+      const user=await res.json();
+      document.getElementById("result").innerHTML=`<div class="profile"><img src="${user.picture||''}" alt=""><div><h3>${user.name||''}</h3><p>${user.email||''}</p></div></div><div class="raw">${JSON.stringify(user,null,2)}</div>`;
+      document.getElementById("result").style.display="block";
+    }
+  </script>
+</body>
+</html>

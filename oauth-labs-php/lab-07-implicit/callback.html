@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html><head><title>OAuth Callback</title></head>
+<body><p>Signing you in...</p>
+<script>
+const f=new URLSearchParams(window.location.hash.substring(1));
+if(window.opener){
+  window.opener.postMessage({access_token:f.get("access_token"),state:f.get("state"),error:f.get("error")},window.location.origin);
+}
+window.close();
+</script>
+</body></html>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lab 09 — GIS renderButton (nonce/hash)</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .card{background:#1e293b;border-radius:12px;padding:40px;max-width:520px;width:100%;box-shadow:0 4px 24px rgba(0,0,0,.3)}
+    .badge{display:inline-block;background:#d97706;color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px}
+    h1{font-size:22px;margin-bottom:4px}
+    .sub{color:#94a3b8;font-size:13px;margin-bottom:24px}
+    .flow{background:#0f172a;border-radius:8px;padding:16px;font-size:12px;color:#94a3b8;line-height:1.8;margin-bottom:24px;font-family:monospace}
+    .flow span{color:#fbbf24}
+    .g-btn-wrap{margin-bottom:16px}
+    .nonce-info{background:#0f172a;border-radius:8px;padding:12px;font-size:12px;color:#fbbf24;font-family:monospace;margin-bottom:16px}
+    #result{margin-top:24px;display:none}
+    .profile{display:flex;align-items:center;gap:16px;background:#0f172a;border-radius:8px;padding:16px}
+    .profile img{width:56px;height:56px;border-radius:50%;border:2px solid #d97706}
+    .profile h3{font-size:16px;margin-bottom:2px}
+    .profile p{color:#94a3b8;font-size:13px}
+    .raw{margin-top:16px;background:#0f172a;border-radius:8px;padding:16px;font-size:12px;color:#67e8f9;font-family:monospace;white-space:pre-wrap;max-height:200px;overflow-y:auto}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">Lab 09</span>
+    <h1>GIS renderButton()</h1>
+    <p class="sub">Google Identity Services — renderButton only. Uses nonce/hash for replay protection via MessageChannel.</p>
+    <div class="flow">
+      1. Client fetches <span>api/nonce.php</span> → server stores hash<br>
+      2. <span>google.accounts.id.initialize({ nonce })</span><br>
+      3. <span>renderButton()</span> via MessageChannel<br>
+      4. User clicks → JWT <span>credential</span> returned<br>
+      5. POST to <span>api/verify.php</span> → PHP checks nonce hash
+    </div>
+    <div id="nonce-display" class="nonce-info" style="display:none"></div>
+    <div id="g_btn" class="g-btn-wrap"></div>
+    <div id="result"></div>
+  </div>
+  <script>
+    let CLIENT_ID="",currentNonce="";
+    async function init(){
+      const cfg=await fetch("api/client-id.php").then(r=>r.json());
+      CLIENT_ID=cfg.client_id;
+      const nr=await fetch("api/nonce.php").then(r=>r.json());
+      currentNonce=nr.nonce;
+      document.getElementById("nonce-display").textContent="nonce: "+currentNonce.slice(0,12)+"...";
+      document.getElementById("nonce-display").style.display="block";
+      const s=document.createElement("script");s.src="https://accounts.google.com/gsi/client";s.onload=initGsi;document.head.appendChild(s);
+    }
+    function initGsi(){
+      google.accounts.id.initialize({client_id:CLIENT_ID,callback:handleCred,nonce:currentNonce});
+      google.accounts.id.renderButton(document.getElementById("g_btn"),{theme:"filled_blue",size:"large",text:"signin_with",shape:"pill",width:300});
+    }
+    async function handleCred(response){
+      const res=await fetch("api/verify.php",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential:response.credential})});
+      const user=await res.json();
+      document.getElementById("result").innerHTML=`<div class="profile"><img src="${user.picture||''}" alt=""><div><h3>${user.name||''}</h3><p>${user.email||''}</p></div></div><div class="raw">${JSON.stringify(user,null,2)}</div>`;
+      document.getElementById("result").style.display="block";
+    }
+    init();
+  </script>
+</body>
+</html>
