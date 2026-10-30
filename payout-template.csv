@@ -1,3 +1,3 @@
-Date,Amount,About,Currency,Tax,Amount After Tax
-2026-01-15,500.00,Example: XSS vulnerability on login page,USD,50.00,450.00
-2026-02-10,1000.00,Example: IDOR in user API endpoint,USD,100.00,900.00
+Date,Amount,About,Currency,Tax (20%),Amount After Tax
+2026-01-15,500.00,Example: XSS vulnerability on login page,USD,=B2*0.20,=B2-E2
+2026-02-10,1000.00,Example: IDOR in user API endpoint,USD,=B3*0.20,=B3-E3
