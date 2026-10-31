@@ -77,6 +77,18 @@
     log("INFO", "Listening for WALLET_OPENED...");
   };
 
+  // ── Generate a random Ethereum address (session key) ──
+
+  function randomSessionAddress() {
+    var bytes = new Uint8Array(20);
+    crypto.getRandomValues(bytes);
+    var hex = "0x";
+    for (var i = 0; i < bytes.length; i++) {
+      hex += ("0" + bytes[i].toString(16)).slice(-2);
+    }
+    return hex;
+  }
+
   // ── Step 2: Send createNewSession after handshake ──
 
   window.createSession = function () {
@@ -84,6 +96,9 @@
       log("ERR", "Not connected yet. Run openWallet() first and wait for handshake.");
       return;
     }
+    var addr = randomSessionAddress();
+    log("INFO", "Generated sessionAddress: " + addr);
+
     var id = genId();
     var msg = {
       id: id,
@@ -91,7 +106,9 @@
       action: "createNewSession",
       payload: {
         origin: window.location.origin,
-        session: {}
+        session: {
+          sessionAddress: addr
+        }
       }
     };
 
