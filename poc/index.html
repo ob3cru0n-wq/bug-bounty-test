@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wallet Connect PoC</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; color: #ccc; font: 13px/1.6 monospace; padding: 24px; max-width: 720px; }
+    h1 { color: #0ff; font-size: 16px; margin-bottom: 16px; }
+    .info { color: #888; margin-bottom: 16px; font-size: 11px; }
+    button { font: 13px monospace; background: #1a1a1a; color: #0ff; border: 1px solid #0ff; padding: 8px 16px; cursor: pointer; border-radius: 3px; margin: 4px 4px 4px 0; }
+    button:hover { background: #0ff; color: #000; }
+    button:disabled { opacity: 0.3; cursor: not-allowed; }
+    #log { background: #111; border: 1px solid #333; padding: 12px; margin-top: 16px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; font-size: 11px; }
+    .log-send { color: #f0f; }
+    .log-recv { color: #0f0; }
+    .log-info { color: #0ff; }
+    .log-err  { color: #f44; }
+  </style>
+</head>
+<body>
+  <h1>Wallet postMessage PoC</h1>
+  <div class="info">
+    Current origin: <strong id="origin"></strong><br>
+    Wallet target: <strong>https://wallet.polygon.technology</strong>
+  </div>
+
+  <button id="btn-connect">1. Open Wallet &amp; Handshake</button>
+  <button id="btn-session" disabled>2. createNewSession</button>
+  <button id="btn-close" disabled>3. Close Wallet</button>
+
+  <div id="log"></div>
+
+  <script src="wallet-connect.js"></script>
+  <script>
+    const logEl = document.getElementById("log");
+    document.getElementById("origin").textContent = window.location.origin;
+
+    function log(cls, msg) {
+      const line = document.createElement("div");
+      line.className = cls;
+      line.textContent = `[${new Date().toISOString().slice(11,23)}] ${msg}`;
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    // Patch console for visibility
+    const _log = console.log, _err = console.error;
+    console.log = (...a) => { _log(...a); log("log-info", a.join(" ")); };
+    console.error = (...a) => { _err(...a); log("log-err", a.join(" ")); };
+
+    // Intercept postMessage to log outbound
+    const _pm = Window.prototype.postMessage;
+    Window.prototype.postMessage = function(data, origin) {
+      if (data && data.type) {
+        log("log-send", `SEND → ${data.type}` +
+          (data.action ? ` action=${data.action}` : "") +
+          (data.sessionId ? ` sessionId=${data.sessionId}` : "") +
+          ` targetOrigin=${origin}`);
+      }
+      return _pm.apply(this, arguments);
+    };
+
+    // Log inbound messages from wallet origin
+    window.addEventListener("message", (e) => {
+      if (e.data && e.data.type) {
+        log("log-recv", `RECV ← ${e.data.type}` +
+          (e.data.sessionId ? ` sessionId=${e.data.sessionId}` : "") +
+          (e.data.payload ? ` payload=${JSON.stringify(e.data.payload).slice(0,200)}` : "") +
+          (e.data.error ? ` error=${JSON.stringify(e.data.error)}` : "") +
+          ` origin=${e.origin}`);
+      }
+    });
+
+    let client = null;
+
+    document.getElementById("btn-connect").addEventListener("click", async () => {
+      client = new WalletConnector("https://wallet.polygon.technology");
+      try {
+        const result = await client.connect();
+        log("log-info", "Handshake OK: " + JSON.stringify(result));
+        document.getElementById("btn-session").disabled = false;
+        document.getElementById("btn-close").disabled = false;
+      } catch (err) {
+        log("log-err", "Handshake failed: " + err.message);
+      }
+    });
+
+    document.getElementById("btn-session").addEventListener("click", async () => {
+      if (!client || !client.connected) return;
+      try {
+        const session = await client.createNewSession();
+        log("log-info", "Session: " + JSON.stringify(session));
+      } catch (err) {
+        log("log-err", "Session error: " + err.message);
+      }
+    });
+
+    document.getElementById("btn-close").addEventListener("click", () => {
+      if (client) client.close();
+      log("log-info", "Wallet closed.");
+      document.getElementById("btn-session").disabled = true;
+      document.getElementById("btn-close").disabled = true;
+    });
+  </script>
+</body>
+</html>
